@@ -189,8 +189,13 @@ app.post("/api/messages", (req, res) => {
 
   res.json({ success: true });
 });
+app.get("/", (req, res) => {
+  res.send("FoundrAI Backend is running 🚀");
+});
 
 
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`FoundrAI API running on http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`FoundrAI API running on port ${PORT}`)
+);
