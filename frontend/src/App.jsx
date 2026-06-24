@@ -1401,7 +1401,7 @@ function AIEvaluatorPage() {
     if (!idea) return;
     setLoading(true);
     setResult(null);
-    const res = await callClaude(null, null, "/ai/evaluate", { idea: `${idea}\nProblem: ${problem}\nMarket Segment: ${segment}` });
+    const res = await callClaude(null, null, "/api/ai/evaluate", { idea: `${idea}\nProblem: ${problem}\nMarket Segment: ${segment}` });
     setResult(res);
     setLoading(false);
   }
