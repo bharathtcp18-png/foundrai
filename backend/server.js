@@ -29,6 +29,7 @@ function auth(req, res, next) {
 }
 
 // ── AUTH ─────────────────────────────────────────────────────────
+console.log("REGISTER HIT:", req.body);
 app.post("/api/auth/register", (req, res) => {
   const { name, email, password, role, location, skills = [], interests = [] } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: "name, email, password are required" });
@@ -42,6 +43,7 @@ app.post("/api/auth/register", (req, res) => {
     name, email, password: hashed, role: role || "Developer", location: location || "",
     avatar, exp: "0 years", skills: JSON.stringify(skills), interests: JSON.stringify(interests),
   });
+  console.log("USER SAVED:", info);
   const user = parseRow(db.prepare("SELECT * FROM users WHERE id = ?").get(info.lastInsertRowid), ["skills", "interests"]);
   delete user.password;
   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
