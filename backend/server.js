@@ -193,7 +193,10 @@ app.get("/", (req, res) => {
   res.send("FoundrAI Backend is running 🚀");
 });
 
-
+app.get("/api/users", (req, res) => {
+  const users = db.prepare("SELECT id, name, email FROM users").all();
+  res.json(users);
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () =>
