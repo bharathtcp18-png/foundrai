@@ -29,8 +29,9 @@ function auth(req, res, next) {
 }
 
 // ── AUTH ─────────────────────────────────────────────────────────
-console.log("REGISTER HIT:", req.body);
+
 app.post("/api/auth/register", (req, res) => {
+  console.log("REGISTER HIT:", req.body);
   const { name, email, password, role, location, skills = [], interests = [] } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: "name, email, password are required" });
   const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
