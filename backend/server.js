@@ -199,6 +199,10 @@ app.get("/api/users", (req, res) => {
   const users = db.prepare("SELECT id, name, email FROM users").all();
   res.json(users);
 });
+app.get("/api/users", (req, res) => {
+  const users = db.prepare("SELECT id, name, email FROM users").all();
+  res.json(users);
+});
 
 
 
