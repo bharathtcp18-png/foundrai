@@ -203,6 +203,10 @@ app.get("/api/connections", (req, res) => {
   const rows = db.prepare("SELECT * FROM connections").all();
   res.json(rows);
 });
+app.get("/api/messages", (req, res) => {
+  const rows = db.prepare("SELECT * FROM messages").all();
+  res.json(rows);
+});
 
 
 
