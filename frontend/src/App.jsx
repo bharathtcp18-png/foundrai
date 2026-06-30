@@ -654,6 +654,48 @@ function MatchingPage({ user, navigate }) {
     setAiExplain(p => ({ ...p, [founder.id]: result }));
     setLoadingAI(p => ({ ...p, [founder.id]: false }));
   }
+  function ConnectionRequestsPage({ user }) {
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    api("/my-requests", { auth: true })
+      .then(setRequests)
+      .catch(console.error);
+  }, []);
+
+  return (
+    <div style={{ maxWidth: 900, margin: "30px auto" }}>
+      <h2>Connection Requests</h2>
+
+      {requests.length === 0 ? (
+        <p>No pending requests.</p>
+      ) : (
+        requests.map((req) => (
+          <div
+            key={req.id}
+            style={{
+              border: "1px solid #ddd",
+              padding: 20,
+              marginBottom: 15,
+              borderRadius: 10,
+            }}
+          >
+            <h3>{req.name}</h3>
+            <p>{req.role}</p>
+
+            <button>Accept</button>
+
+            <button
+              style={{ marginLeft: 10 }}
+            >
+              Reject
+            </button>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
 
   function handleConnect(founder) {
     if (!connected.includes(founder.id)) {
@@ -1549,6 +1591,7 @@ export default function FoundrAI() {
   const navItems = [
     { key: "dashboard", label: "🏠 Dashboard" },
     { key: "matching", label: "🤝 Find Co-Founder" },
+    { key: "requests", label: "📩 Requests" },
     { key: "startups", label: "💡 Startups" },
     { key: "workspace", label: "🛠️ Workspace" },
     { key: "mentors", label: "🎓 Mentors" },
@@ -1556,6 +1599,7 @@ export default function FoundrAI() {
     { key: "evaluator", label: "🤖 AI Evaluator" },
     { key: "pitch", label: "🎤 Pitch Generator" },
     { key: "profile", label: "👤 Profile" },
+   
   ];
 
   // NOTE: LandingPage only ever calls navigate() right after it has just
@@ -1604,6 +1648,7 @@ export default function FoundrAI() {
       <div>
         {page === "dashboard" && <Dashboard user={user} navigate={setPage} />}
         {page === "matching" && <MatchingPage user={user} navigate={setPage} />}
+        {page === "requests" && <ConnectionRequestsPage user={user} />}
         {page === "startups" && <StartupsPage navigate={setPage} />}
         {page === "workspace" && <WorkspacePage />}
         {page === "mentors" && <MentorsPage />}
