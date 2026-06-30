@@ -203,6 +203,20 @@ app.get("/api/connections", (req, res) => {
   const rows = db.prepare("SELECT * FROM connections").all();
   res.json(rows);
 });
+app.get("/api/my-requests", auth, (req, res) => {
+  const requests = db.prepare(`
+    SELECT
+      connections.id,
+      connections.status,
+      users.name,
+      users.email
+    FROM connections
+    JOIN users ON users.id = connections.user_id
+    WHERE connections.founder_id = ?
+  `).all(req.user.id);
+
+  res.json(requests);
+});
 app.get("/api/messages", (req, res) => {
   const rows = db.prepare("SELECT * FROM messages").all();
   res.json(rows);
