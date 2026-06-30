@@ -229,24 +229,39 @@ app.get("/api/messages", (req, res) => {
   const rows = db.prepare("SELECT * FROM messages").all();
   res.json(rows);
 });
-app.get("/api/my-requests", auth, (req, res) => {
-  const rows = db.prepare(`
-    SELECT
-      connections.id,
-      connections.status,
-      users.id AS user_id,
-      users.name,
-      users.email,
-      users.role,
-      users.skills
-    FROM connections
-    JOIN users
-      ON connections.user_id = users.id
-    WHERE connections.founder_id = ?
-      AND connections.status = 'pending'
-  `).all(req.user.id);
+app.get("/api/my-requests", (req, res) => {
+  const authHeader = req.headers.authorization;
 
-  res.json(rows);
+  if (!authHeader) {
+    return res.status(401).json({ error: "Missing token" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const jwt = require("jsonwebtoken");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
+
+    const rows = db.prepare(`
+      SELECT
+        connections.id,
+        connections.status,
+        users.id AS user_id,
+        users.name,
+        users.email,
+        users.role,
+        users.skills
+      FROM connections
+      JOIN users
+        ON connections.user_id = users.id
+      WHERE connections.founder_id = ?
+        AND connections.status = 'pending'
+    `).all(decoded.id);
+
+    res.json(rows);
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
 });
 
 
