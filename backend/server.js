@@ -17,14 +17,22 @@ const parseRow = (row, fields) => {
 };
 
 function auth(req, res, next) {
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ error: "Missing token" });
+  const header = req.headers.authorization;
+
+  if (!header) {
+    return res.status(401).json({ error: "Missing token" });
+  }
+
+  const token = header.split(" ")[1]; // removes "Bearer"
+
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
+    const jwt = require("jsonwebtoken");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
+
+    req.user = decoded; // contains user id
     next();
-  } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
   }
 }
 

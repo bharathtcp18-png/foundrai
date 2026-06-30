@@ -1575,18 +1575,43 @@ function PitchGeneratorPage() {
 }
 function ConnectionRequestsPage({ user }) {
   const [requests, setRequests] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    api("/my-requests", { auth: true })
-      .then(setRequests)
-      .catch(console.error);
+    const token = localStorage.getItem("foundrai_token");
+
+    fetch("https://foundrai-1.onrender.com/api/my-requests", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("REQUESTS API:", data);
+
+        if (Array.isArray(data)) {
+          setRequests(data);
+        } else {
+          setRequests([]);
+        }
+
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
   return (
     <div style={{ padding: 30 }}>
       <h2>📩 Connection Requests</h2>
 
-      {requests.length === 0 ? (
+      {loading ? (
+        <p>Loading...</p>
+      ) : requests.length === 0 ? (
         <p>No pending requests.</p>
       ) : (
         requests.map((r) => (
@@ -1649,49 +1674,149 @@ export default function FoundrAI() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", fontFamily: "'Inter', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
-        * { box-sizing: border-box; }
-        .hover-card { transition: all 0.3s !important; }
-        .hover-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(79,70,229,0.12) !important; }
-        .pulse-ring { animation: pulse 2.5s infinite; }
-        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(79,70,229,0.3)} 50%{box-shadow:0 0 0 8px rgba(79,70,229,0)} }
-      `}</style>
+  <div style={{ minHeight: "100vh", background: "#F8FAFC", fontFamily: "'Inter', sans-serif" }}>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&family=Inter:wght@400;500;600&display=swap');
+      * { box-sizing: border-box; }
+      .hover-card { transition: all 0.3s !important; }
+      .hover-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(79,70,229,0.12) !important; }
+      .pulse-ring { animation: pulse 2.5s infinite; }
+      @keyframes pulse {
+        0%,100%{box-shadow:0 0 0 0 rgba(79,70,229,0.3)}
+        50%{box-shadow:0 0 0 8px rgba(79,70,229,0)}
+      }
+    `}</style>
 
-      {/* App Nav */}
-      <nav style={{ background: COLORS.navy, height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 16px rgba(15,22,41,0.3)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => setPage("landing")}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${COLORS.indigo}, ${COLORS.violet})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>⚡</div>
-          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: 18, color: "#fff" }}>Foundr<span style={{ color: "#818CF8" }}>AI</span></span>
-        </div>
-        <div style={{ display: "flex", gap: 4, overflowX: "auto" }}>
-          {navItems.map(item => (
-            <button key={item.key} onClick={() => setPage(item.key)}
-              style={{ background: page === item.key ? "rgba(79,70,229,0.3)" : "transparent", border: page === item.key ? `1px solid rgba(79,70,229,0.5)` : "1px solid transparent", color: page === item.key ? "#A5B4FC" : "#94A3B8", padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s", fontFamily: "'Inter', sans-serif" }}>
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Avatar initials={user?.avatar || "U"} size={34} />
-          <span style={{ color: "#94A3B8", fontSize: 13 }}>{user?.name?.split(" ")[0]}</span>
-          <button onClick={() => { localStorage.removeItem("foundrai_token"); setUser(null); setPage("landing"); }} style={{ background: "none", border: "1px solid rgba(255,255,255,0.15)", color: "#94A3B8", padding: "4px 12px", borderRadius: 8, cursor: "pointer", fontSize: 12 }}>Logout</button>
-        </div>
-      </nav>
+    {/* NAVBAR */}
+    <nav
+      style={{
+        background: COLORS.navy,
+        height: 60,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        boxShadow: "0 2px 16px rgba(15,22,41,0.3)"
+      }}
+    >
 
-      {/* Page Content */}
-      <div>
-        {page === "dashboard" && <Dashboard user={user} navigate={setPage} />}
-        {page === "matching" && <MatchingPage user={user} navigate={setPage} />}
-        {page === "requests" && <ConnectionRequestsPage user={user} />}
-        {page === "startups" && <StartupsPage navigate={setPage} />}
-        {page === "workspace" && <WorkspacePage />}
-        {page === "mentors" && <MentorsPage />}
-        {page === "investors" && <InvestorsPage />}
-        {page === "evaluator" && <AIEvaluatorPage />}
-        {page === "pitch" && <PitchGeneratorPage />}
-        {page === "profile" && <ProfilePage user={user} />}
+      {/* LEFT - LOGO */}
+      <div
+        style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
+        onClick={() => setPage("landing")}
+      >
+        <div
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            background: `linear-gradient(135deg, ${COLORS.indigo}, ${COLORS.violet})`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 15
+          }}
+        >
+          ⚡
+        </div>
+
+        <span
+          style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontWeight: 800,
+            fontSize: 18,
+            color: "#fff"
+          }}
+        >
+          Foundr<span style={{ color: "#818CF8" }}>AI</span>
+        </span>
       </div>
+
+      {/* CENTER - NAV BUTTONS */}
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 6,
+          overflowX: "auto"
+        }}
+      >
+        {navItems.map(item => (
+          <button
+            key={item.key}
+            onClick={() => setPage(item.key)}
+            style={{
+              background: page === item.key
+                ? "rgba(79,70,229,0.3)"
+                : "transparent",
+              border: page === item.key
+                ? "1px solid rgba(79,70,229,0.5)"
+                : "1px solid transparent",
+              color: page === item.key ? "#A5B4FC" : "#94A3B8",
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              transition: "all 0.2s",
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      {/* RIGHT - USER */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Avatar initials={user?.avatar || "U"} size={34} />
+
+        <span style={{ color: "#94A3B8", fontSize: 13 }}>
+          {user?.name?.split(" ")[0]}
+        </span>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("foundrai_token");
+            setUser(null);
+            setPage("landing");
+          }}
+          style={{
+            background: "none",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "#94A3B8",
+            padding: "4px 12px",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontSize: 12
+          }}
+        >
+          Logout
+        </button>
+      </div>
+
+    </nav>
+
+    {/* PAGE CONTENT */}
+    <div>
+      {page === "dashboard" && <Dashboard user={user} navigate={setPage} />}
+      {page === "matching" && <MatchingPage user={user} navigate={setPage} />}
+      {page === "requests" && <ConnectionRequestsPage user={user} />}
+      {page === "startups" && <StartupsPage navigate={setPage} />}
+      {page === "workspace" && <WorkspacePage />}
+      {page === "mentors" && <MentorsPage />}
+      {page === "investors" && <InvestorsPage />}
+      {page === "evaluator" && <AIEvaluatorPage />}
+      {page === "pitch" && <PitchGeneratorPage />}
+      {page === "profile" && <ProfilePage user={user} />}
     </div>
+
+  </div>
   );
 }
