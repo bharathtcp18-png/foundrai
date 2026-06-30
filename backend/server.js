@@ -5,7 +5,11 @@ const jwt = require("jsonwebtoken");
 const db = require("./db");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || "foundrai-dev-secret-change-me";

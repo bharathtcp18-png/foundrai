@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
+
 // ─── Design tokens ───────────────────────────────────────────────────────────
 // Palette: deep navy #0F1629, electric indigo #4F46E5, vivid violet #7C3AED,
 //          soft lavender #EEF2FF, off-white #F8FAFC, warm slate #94A3B8
@@ -284,25 +285,93 @@ function LandingPage({ navigate, setUser }) {
       `}</style>
 
       {/* NAV */}
-      <nav style={{ background: "rgba(15,22,41,0.95)", backdropFilter: "blur(20px)", padding: "0 40px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => navigate("landing")}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${COLORS.indigo}, ${COLORS.violet})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>⚡</div>
-          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: 22, color: "#fff", letterSpacing: -0.5 }}>Foundr<span style={{ color: COLORS.indigo }}>AI</span></span>
-        </div>
-        <div style={{ display: "flex", gap: 28 }}>
-          {["Explore Startups", "Find Co-Founder", "Mentors", "Investors"].map(item => {
-            const target = item === "Explore Startups" ? "startups" : item === "Find Co-Founder" ? "matching" : item.toLowerCase();
-            return (
-              <span key={item} className="nav-link" onClick={() => goOrLogin(target)}
-                style={{ color: "#CBD5E1", fontSize: 14, fontWeight: 500, cursor: "pointer", transition: "color 0.2s" }}>{item}</span>
-            );
-          })}
-        </div>
-        <div style={{ display: "flex", gap: 12 }}>
-          <Button variant="ghost" onClick={() => setShowLogin(true)} size="sm">Login</Button>
-          <Button onClick={() => setShowRegister(true)} size="sm">Register</Button>
-        </div>
-      </nav>
+      <nav
+  style={{
+    background: "rgba(15,22,41,0.95)",
+    backdropFilter: "blur(20px)",
+    padding: "0 40px",
+    height: 68,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    position: "sticky",
+    top: 0,
+    zIndex: 100,
+    borderBottom: "1px solid rgba(255,255,255,0.08)"
+  }}
+>
+  {/* LOGO */}
+  <div
+    style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
+    onClick={() => navigate("landing")}
+  >
+    <div
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        background: `linear-gradient(135deg, ${COLORS.indigo}, ${COLORS.violet})`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 18
+      }}
+    >
+      ⚡
+    </div>
+
+    <span
+      style={{
+        fontFamily: "'Space Grotesk', sans-serif",
+        fontWeight: 800,
+        fontSize: 22,
+        color: "#fff",
+        letterSpacing: -0.5
+      }}
+    >
+      Foundr<span style={{ color: COLORS.indigo }}>AI</span>
+    </span>
+  </div>
+
+  {/* MENU */}
+  <div style={{ display: "flex", gap: 28 }}>
+    {["Explore Startups", "Find Co-Founder", "Mentors", "Investors", "Requests"].map(item => {
+
+      const target =
+        item === "Explore Startups"
+          ? "startups"
+          : item === "Find Co-Founder"
+          ? "matching"
+          : item === "Mentors"
+          ? "mentors"
+          : item === "Investors"
+          ? "investors"
+          : item === "Requests"
+          ? "requests"
+          : item.toLowerCase();
+
+      return (
+        <span
+          key={item}
+          className="nav-link"
+          onClick={() => {
+  console.log("CLICKED PAGE:", target);
+  goOrLogin(target);
+}}
+          style={{
+            color: "#CBD5E1",
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: "pointer",
+            transition: "color 0.2s"
+          }}
+        >
+          {item}
+        </span>
+      );
+    })}
+  </div>
+</nav>
 
       {/* HERO */}
       <section style={{ background: `linear-gradient(135deg, ${COLORS.navy} 0%, #1a1060 50%, #0d1f3c 100%)`, padding: "100px 40px 80px", textAlign: "center", position: "relative", overflow: "hidden" }}>
@@ -654,49 +723,143 @@ function MatchingPage({ user, navigate }) {
     setAiExplain(p => ({ ...p, [founder.id]: result }));
     setLoadingAI(p => ({ ...p, [founder.id]: false }));
   }
-  function ConnectionRequestsPage({ user }) {
+  function ConnectionRequestsPage() {
   const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api("/my-requests", { auth: true })
-      .then(setRequests)
-      .catch(console.error);
-  }, []);
+  const loadRequests = async () => {
+    const token = localStorage.getItem("foundrai_token");
+
+    if (!token) {
+      console.log("NO TOKEN - USER NOT LOGGED IN");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        "https://foundrai-1.onrender.com/api/my-requests",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await res.json();
+      console.log("REQUESTS:", data);
+
+      setRequests(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadRequests();
+}, []);
 
   return (
-    <div style={{ maxWidth: 900, margin: "30px auto" }}>
-      <h2>Connection Requests</h2>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#F8FAFC",
+        padding: "40px 20px",
+        fontFamily: "'Inter', sans-serif"
+      }}
+    >
+      {/* CENTER CONTAINER */}
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
 
-      {requests.length === 0 ? (
-        <p>No pending requests.</p>
-      ) : (
-        requests.map((req) => (
+        {/* TITLE */}
+        <h2
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            marginBottom: 24,
+            color: "#0F172A"
+          }}
+        >
+          📩 Connection Requests
+        </h2>
+
+        {/* LOADING */}
+        {loading && (
+          <div style={{ color: "#64748B", fontSize: 14 }}>
+            Loading requests...
+          </div>
+        )}
+
+        {/* EMPTY STATE */}
+        {!loading && requests.length === 0 && (
           <div
-            key={req.id}
             style={{
-              border: "1px solid #ddd",
               padding: 20,
-              marginBottom: 15,
-              borderRadius: 10,
+              background: "#fff",
+              borderRadius: 12,
+              border: "1px solid #E2E8F0",
+              color: "#64748B",
+              textAlign: "center"
             }}
           >
-            <h3>{req.name}</h3>
-            <p>{req.role}</p>
-
-            <button>Accept</button>
-
-            <button
-              style={{ marginLeft: 10 }}
-            >
-              Reject
-            </button>
+            No pending connection requests
           </div>
-        ))
-      )}
+        )}
+
+        {/* CARDS LIST */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {requests.map((r) => (
+            <div
+              key={r.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "14px 16px",
+                borderRadius: 12,
+                background: "#fff",
+                border: "1px solid #E2E8F0",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+              }}
+            >
+              {/* LEFT */}
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>
+                  {r.name}
+                </div>
+                <div style={{ fontSize: 13, color: "#64748B" }}>
+                  {r.email}
+                </div>
+              </div>
+
+              {/* RIGHT BADGE */}
+              <div
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 20,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background:
+                    r.status === "pending" ? "#FEF3C7" : "#DCFCE7",
+                  color:
+                    r.status === "pending" ? "#92400E" : "#166534"
+                }}
+              >
+                {r.status}
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
     </div>
   );
 }
-
   function handleConnect(founder) {
     if (!connected.includes(founder.id)) {
       setConnected(p => [...p, founder.id]);
@@ -1574,36 +1737,35 @@ function PitchGeneratorPage() {
   );
 }
 function ConnectionRequestsPage({ user }) {
-  const [requests, setRequests] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
+  console.log("Requests Page Loaded");
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
-    const token = localStorage.getItem("foundrai_token");
+  useEffect(() => {
+  const token = localStorage.getItem("foundrai_token");
 
-    fetch("https://foundrai-1.onrender.com/api/my-requests", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      }
+  if (!token) {
+    setLoading(false);
+    return;
+  }
+
+  fetch("https://foundrai-1.onrender.com/api/my-requests", {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  })
+    .then(res => res.json())
+    .then(data => {
+      setRequests(Array.isArray(data) ? data : []);
     })
-      .then(res => res.json())
-      .then(data => {
-        console.log("REQUESTS API:", data);
-
-        if (Array.isArray(data)) {
-          setRequests(data);
-        } else {
-          setRequests([]);
-        }
-
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+    .catch(() => {
+      setRequests([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+}, []);
 
   return (
     <div style={{ padding: 30 }}>
@@ -1633,6 +1795,7 @@ function ConnectionRequestsPage({ user }) {
     </div>
   );
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN APP
