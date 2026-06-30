@@ -1573,6 +1573,41 @@ function PitchGeneratorPage() {
     </div>
   );
 }
+function ConnectionRequestsPage({ user }) {
+  const [requests, setRequests] = React.useState([]);
+
+  React.useEffect(() => {
+    api("/my-requests", { auth: true })
+      .then(setRequests)
+      .catch(console.error);
+  }, []);
+
+  return (
+    <div style={{ padding: 30 }}>
+      <h2>📩 Connection Requests</h2>
+
+      {requests.length === 0 ? (
+        <p>No pending requests.</p>
+      ) : (
+        requests.map((r) => (
+          <div
+            key={r.id}
+            style={{
+              border: "1px solid #ddd",
+              padding: 15,
+              borderRadius: 10,
+              marginBottom: 15,
+            }}
+          >
+            <h3>{r.name}</h3>
+            <p>{r.email}</p>
+            <p>Status: {r.status}</p>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN APP
