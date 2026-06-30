@@ -207,6 +207,25 @@ app.get("/api/messages", (req, res) => {
   const rows = db.prepare("SELECT * FROM messages").all();
   res.json(rows);
 });
+app.get("/api/my-requests", auth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      connections.id,
+      connections.status,
+      users.id AS user_id,
+      users.name,
+      users.email,
+      users.role,
+      users.skills
+    FROM connections
+    JOIN users
+      ON connections.user_id = users.id
+    WHERE connections.founder_id = ?
+      AND connections.status = 'pending'
+  `).all(req.user.id);
+
+  res.json(rows);
+});
 
 
 
