@@ -761,9 +761,7 @@ function MatchingPage({ user, navigate }) {
       console.error(err);
     }
   }
-  const acceptRequest = (id) => {
-  console.log("TEST CLICK:", id);
-};
+ 
 
   return (
     <div>
