@@ -252,58 +252,71 @@ app.get("/api/my-requests", auth, (req, res) => {
 app.post("/api/accept-request/:id", auth, (req, res) => {
   const id = req.params.id;
 
-  db.prepare(`
-    UPDATE connections
-    SET status = 'accepted'
-    WHERE id = ?
-  `).run(id);
+  console.log("🔥 ACCEPT API HIT:", id);
 
-  res.json({
-    success: true,
-    message: "Connection accepted successfully"
-  });
+  try {
+    // check request exists
+    const request = db.prepare(`
+      SELECT *
+      FROM connections
+      WHERE id = ?
+    `).get(id);
+
+    if (!request) {
+      return res.status(404).json({
+        error: "Request not found"
+      });
+    }
+
+    // update status
+    db.prepare(`
+      UPDATE connections
+      SET status = 'accepted'
+      WHERE id = ?
+    `).run(id);
+
+    res.json({
+      success: true,
+      message: "Connection accepted successfully"
+    });
+
+  } catch (err) {
+    console.error("Accept request error:", err);
+    res.status(500).json({
+      error: "Server error while accepting request"
+    });
+  }
 });
+
+
+// OPTIONAL: messages (keep as-is)
 app.get("/api/messages", (req, res) => {
   const rows = db.prepare("SELECT * FROM messages").all();
   res.json(rows);
 });
-app.get("/api/my-requests", (req, res) => {
-  const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    return res.status(401).json({ error: "Missing token" });
-  }
 
-  const token = authHeader.split(" ")[1];
+// FIXED: single clean my-requests API (IMPORTANT)
+app.get("/api/my-requests", auth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      connections.id,
+      connections.status,
+      users.id AS user_id,
+      users.name,
+      users.email,
+      users.role,
+      users.skills
+    FROM connections
+    JOIN users ON users.id = connections.user_id
+    WHERE connections.founder_id = ?
+  `).all(req.user.id);
 
-  try {
-    const jwt = require("jsonwebtoken");
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
-
-    const rows = db.prepare(`
-      SELECT
-        connections.id,
-        connections.status,
-        users.id AS user_id,
-        users.name,
-        users.email,
-        users.role,
-        users.skills
-      FROM connections
-      JOIN users
-        ON connections.user_id = users.id
-      WHERE connections.founder_id = ?
-        AND connections.status = 'pending'
-    `).all(decoded.id);
-
-    res.json(rows);
-  } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
-  }
+  res.json(rows);
 });
 
 
-
+// server start
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () =>
   console.log(`FoundrAI API running on port ${PORT}`)

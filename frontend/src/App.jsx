@@ -729,14 +729,32 @@ function MatchingPage({ user, navigate }) {
   }
   function ConnectionRequestsPage() {
   const [requests, setRequests] = useState([]);
+  console.log("REQUEST PAGE LOADED");
   async function acceptRequest(requestId) {
   try {
-    await api(`/accept-request/${requestId}`, {
-      method: "POST",
-      auth: true
-    });
+    console.log("CLICKED ACCEPT:", requestId);
 
-    // Update the request status in the UI
+    const token = localStorage.getItem("foundrai_token");
+
+    const res = await fetch(
+      `https://foundrai-1.onrender.com/api/accept-request/${requestId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      }
+    );
+
+    const data = await res.json();
+    console.log("RESPONSE:", data);
+
+    if (!res.ok) {
+      throw new Error(data.error || "Request failed");
+    }
+
+    // update UI instantly
     setRequests(prev =>
       prev.map(r =>
         r.id === requestId
@@ -745,11 +763,11 @@ function MatchingPage({ user, navigate }) {
       )
     );
 
-    alert("Connection accepted successfully!");
+    alert("Connection accepted!");
 
   } catch (err) {
-    console.error(err);
-    alert("Failed to accept request");
+    console.error("ERROR:", err);
+    alert("Accept failed");
   }
 }
   const [loading, setLoading] = useState(true);
@@ -840,7 +858,7 @@ function MatchingPage({ user, navigate }) {
 
         {/* CARDS LIST */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          console.log("REQUESTS:", requests);
+          
           {requests.map((r) => (
             <div
               key={r.id}
@@ -871,11 +889,14 @@ function MatchingPage({ user, navigate }) {
   {r.status === "pending" ? (
     <>
       <Button
-        size="sm"
-        onClick={() => acceptRequest(r.id)}
-      >
-        Accept
-      </Button>
+  size="sm"
+  onClick={() => {
+    console.log("CLICK WORKS", r.id);
+    acceptRequest(r.id);
+  }}
+>
+  Accept
+</Button>
 
       <Button
         size="sm"
