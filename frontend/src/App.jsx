@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 
 
@@ -56,6 +57,7 @@ const MOCK_INVESTORS = [
 
 // ─── Reusable Components ─────────────────────────────────────────────────────
 function Avatar({ initials, size = 44, color = COLORS.indigo }) {
+  console.log("APP IS RUNNING")
   return (
     <div style={{ width: size, height: size, borderRadius: "50%", background: `linear-gradient(135deg, ${color}, ${COLORS.violet})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: size * 0.35, fontFamily: "'Space Grotesk', sans-serif", flexShrink: 0 }}>
       {initials}
@@ -729,136 +731,128 @@ function MatchingPage({ user, navigate }) {
   }
   function ConnectionRequestsPage() {
   const [requests, setRequests] = useState([]);
-  console.log("REQUEST PAGE LOADED");
-  async function acceptRequest(requestId) {
-  try {
-    console.log("CLICKED ACCEPT:", requestId);
-
-    const token = localStorage.getItem("foundrai_token");
-
-    const res = await fetch(
-      `https://foundrai-1.onrender.com/api/accept-request/${requestId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      }
-    );
-
-    const data = await res.json();
-    console.log("RESPONSE:", data);
-
-    if (!res.ok) {
-      throw new Error(data.error || "Request failed");
-    }
-
-    // update UI instantly
-    setRequests(prev =>
-      prev.map(r =>
-        r.id === requestId
-          ? { ...r, status: "accepted" }
-          : r
-      )
-    );
-
-    alert("Connection accepted!");
-
-  } catch (err) {
-    console.error("ERROR:", err);
-    alert("Accept failed");
-  }
-}
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-  const loadRequests = async () => {
-    const token = localStorage.getItem("foundrai_token");
+  console.log("REQUEST PAGE LOADED");
 
-    if (!token) {
-      console.log("NO TOKEN - USER NOT LOGGED IN");
-      setLoading(false);
-      return;
-    }
-
+  // ✅ ACCEPT REQUEST FUNCTION
+  async function acceptRequest(requestId) {
     try {
+      console.log("CLICKED:", requestId);
+
+      const token = localStorage.getItem("foundrai_token");
+      console.log("TOKEN:", token);
+      console.log("REQUEST ID:", requestId);
+
       const res = await fetch(
-        "https://foundrai-1.onrender.com/api/my-requests",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          }
-        }
-      );
+  `https://foundrai-1.onrender.com/api/accept-request/${requestId}`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  }
+);
 
       const data = await res.json();
-      console.log("REQUESTS:", data);
+      console.log("RESPONSE:", data);
 
-      setRequests(Array.isArray(data) ? data : []);
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      // update UI instantly
+      setRequests(prev =>
+        prev.map(r =>
+          r.id === requestId
+            ? { ...r, status: "accepted" }
+            : r
+        )
+      );
+
+      alert("Connection accepted!");
+
     } catch (err) {
-      console.error(err);
-      setRequests([]);
-    } finally {
-      setLoading(false);
+      console.error("ERROR:", err);
+      alert("Accept failed");
     }
-  };
+  }
 
-  loadRequests();
-}, []);
+  // ✅ LOAD REQUESTS
+  useEffect(() => {
+    const loadRequests = async () => {
+      const token = localStorage.getItem("foundrai_token");
+
+      if (!token) {
+        console.log("NO TOKEN - USER NOT LOGGED IN");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          "https://foundrai-1.onrender.com/api/my-requests",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            }
+          }
+        );
+
+        const data = await res.json();
+        console.log("REQUESTS:", data);
+
+        setRequests(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+        setRequests([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRequests();
+  }, []);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#F8FAFC",
-        padding: "40px 20px",
-        fontFamily: "'Inter', sans-serif"
-      }}
-    >
-      {/* CENTER CONTAINER */}
+    <div style={{
+      minHeight: "100vh",
+      background: "#F8FAFC",
+      padding: "40px 20px",
+      fontFamily: "'Inter', sans-serif"
+    }}>
       <div style={{ maxWidth: 800, margin: "0 auto" }}>
 
-        {/* TITLE */}
-        <h2
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 24,
-            color: "#0F172A"
-          }}
-        >
+        <h2 style={{
+          fontSize: 22,
+          fontWeight: 700,
+          marginBottom: 24,
+          color: "#0F172A"
+        }}>
           📩 Connection Requests
         </h2>
 
-        {/* LOADING */}
         {loading && (
           <div style={{ color: "#64748B", fontSize: 14 }}>
             Loading requests...
           </div>
         )}
 
-        {/* EMPTY STATE */}
         {!loading && requests.length === 0 && (
-          <div
-            style={{
-              padding: 20,
-              background: "#fff",
-              borderRadius: 12,
-              border: "1px solid #E2E8F0",
-              color: "#64748B",
-              textAlign: "center"
-            }}
-          >
+          <div style={{
+            padding: 20,
+            background: "#fff",
+            borderRadius: 12,
+            border: "1px solid #E2E8F0",
+            color: "#64748B",
+            textAlign: "center"
+          }}>
             No pending connection requests
           </div>
         )}
 
-        {/* CARDS LIST */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          
+
           {requests.map((r) => (
             <div
               key={r.id}
@@ -883,47 +877,39 @@ function MatchingPage({ user, navigate }) {
                 </div>
               </div>
 
-              {/* RIGHT BADGE */}
+              {/* RIGHT */}
               <div style={{ display: "flex", gap: 10 }}>
 
-  {r.status === "pending" ? (
-    <>
-      <Button
-  size="sm"
-  onClick={() => {
-    console.log("CLICK WORKS", r.id);
-    acceptRequest(r.id);
-  }}
->
-  Accept
-</Button>
+                {r.status === "pending" ? (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => acceptRequest(r.id)}
+                    >
+                      Accept
+                    </Button>
 
-      <Button
-        size="sm"
-        variant="secondary"
-      >
-        Reject
-      </Button>
-    </>
-  ) : (
-    <div
-      style={{
-        padding: "4px 10px",
-        borderRadius: 20,
-        background: "#DCFCE7",
-        color: "#166534",
-        fontWeight: 600
-      }}
-    >
-      Connected
-    </div>
-  )}
+                    <Button size="sm" variant="secondary">
+                      Reject
+                    </Button>
+                  </>
+                ) : (
+                  <div style={{
+                    padding: "4px 10px",
+                    borderRadius: 20,
+                    background: "#DCFCE7",
+                    color: "#166534",
+                    fontWeight: 600
+                  }}>
+                    Connected
+                  </div>
+                )}
 
-</div>
+              </div>
             </div>
           ))}
-        </div>
 
+        </div>
       </div>
     </div>
   );
