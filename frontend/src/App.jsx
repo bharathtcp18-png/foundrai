@@ -672,10 +672,13 @@ function MatchingPage({ user, navigate }) {
   const [messages, setMessages] = useState({});
 
   useEffect(() => {
-    api("/match", { method: "POST", body: { skills: user?.skills || [], interests: user?.interests || [] } })
-      .then(setFounders)
-      .catch(() => api("/founders").then(setFounders).catch(() => {}));
-  }, []);
+  api("/users")
+    .then(data => {
+      const users = data.filter(u => u.id !== user.id);
+      setFounders(users);
+    })
+    .catch(err => console.log(err));
+}, [user]);
 
   async function applyFilters() {
     try {

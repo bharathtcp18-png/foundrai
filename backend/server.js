@@ -208,8 +208,28 @@ app.get("/", (req, res) => {
   res.send("FoundrAI Backend is running 🚀");
 });
 app.get("/api/users", (req, res) => {
-  const users = db.prepare("SELECT id, name, email FROM users").all();
-  res.json(users);
+  const users = db.prepare(`
+    SELECT
+      id,
+      name,
+      email,
+      role,
+      location,
+      avatar,
+      exp,
+      skills,
+      interests
+    FROM users
+  `).all();
+
+  res.json(
+    users.map(user => ({
+      ...user,
+      skills: user.skills ? JSON.parse(user.skills) : [],
+      interests: user.interests ? JSON.parse(user.interests) : [],
+      score: 90
+    }))
+  );
 });
 app.get("/api/connections", (req, res) => {
   const rows = db.prepare("SELECT * FROM connections").all();
