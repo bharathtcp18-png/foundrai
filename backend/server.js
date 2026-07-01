@@ -249,6 +249,20 @@ app.get("/api/my-requests", auth, (req, res) => {
 
   res.json(requests);
 });
+app.post("/api/accept-request/:id", auth, (req, res) => {
+  const id = req.params.id;
+
+  db.prepare(`
+    UPDATE connections
+    SET status = 'accepted'
+    WHERE id = ?
+  `).run(id);
+
+  res.json({
+    success: true,
+    message: "Connection accepted successfully"
+  });
+});
 app.get("/api/messages", (req, res) => {
   const rows = db.prepare("SELECT * FROM messages").all();
   res.json(rows);

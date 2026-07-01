@@ -675,6 +675,7 @@ function MatchingPage({ user, navigate }) {
   api("/users")
     .then(data => {
       const users = data.filter(u => u.id !== user.id);
+      console.log("USERS FROM API:", users);
       setFounders(users);
     })
     .catch(err => console.log(err));
@@ -728,6 +729,29 @@ function MatchingPage({ user, navigate }) {
   }
   function ConnectionRequestsPage() {
   const [requests, setRequests] = useState([]);
+  async function acceptRequest(requestId) {
+  try {
+    await api(`/accept-request/${requestId}`, {
+      method: "POST",
+      auth: true
+    });
+
+    // Update the request status in the UI
+    setRequests(prev =>
+      prev.map(r =>
+        r.id === requestId
+          ? { ...r, status: "accepted" }
+          : r
+      )
+    );
+
+    alert("Connection accepted successfully!");
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to accept request");
+  }
+}
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -816,6 +840,7 @@ function MatchingPage({ user, navigate }) {
 
         {/* CARDS LIST */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          console.log("REQUESTS:", requests);
           {requests.map((r) => (
             <div
               key={r.id}
@@ -841,20 +866,39 @@ function MatchingPage({ user, navigate }) {
               </div>
 
               {/* RIGHT BADGE */}
-              <div
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 20,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  background:
-                    r.status === "pending" ? "#FEF3C7" : "#DCFCE7",
-                  color:
-                    r.status === "pending" ? "#92400E" : "#166534"
-                }}
-              >
-                {r.status}
-              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+
+  {r.status === "pending" ? (
+    <>
+      <Button
+        size="sm"
+        onClick={() => acceptRequest(r.id)}
+      >
+        Accept
+      </Button>
+
+      <Button
+        size="sm"
+        variant="secondary"
+      >
+        Reject
+      </Button>
+    </>
+  ) : (
+    <div
+      style={{
+        padding: "4px 10px",
+        borderRadius: 20,
+        background: "#DCFCE7",
+        color: "#166534",
+        fontWeight: 600
+      }}
+    >
+      Connected
+    </div>
+  )}
+
+</div>
             </div>
           ))}
         </div>
@@ -1791,7 +1835,23 @@ function ConnectionRequestsPage({ user }) {
           >
             <h3>{r.name}</h3>
             <p>{r.email}</p>
-            <p>Status: {r.status}</p>
+            <div style={{ display: "flex", gap: 10 }}>
+
+  {r.status === "pending" ? (
+    <>
+      <button onClick={() => acceptRequest(r.id)}>
+        Accept
+      </button>
+
+      <button>
+        Reject
+      </button>
+    </>
+  ) : (
+    <p style={{ color: "green" }}>Connected</p>
+  )}
+
+</div>
           </div>
         ))
       )}
