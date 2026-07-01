@@ -249,10 +249,11 @@ app.get("/api/my-requests", auth, (req, res) => {
 
   res.json(requests);
 });
-app.post("/api/accept-request/:id", auth, (req, res) => {
-  const id = req.params.id;
+app.post("/api/accept-request/:id", (req, res) => {
+  
 
-  console.log("🔥 ACCEPT API HIT:", id);
+   console.log("🔥 ACCEPT API HIT:", req.params.id); 
+   const id = req.params.id;
 
   try {
     // check request exists
