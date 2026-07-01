@@ -732,16 +732,22 @@ function MatchingPage({ user, navigate }) {
   function ConnectionRequestsPage() {
   const [requests, setRequests] = useState([]);
 
-  async function acceptRequest(requestId) {
-    console.log("CLICKED:", requestId);
+  console.log("REQUEST PAGE LOADED");
 
+  // ✅ MUST be inside component
+  const acceptRequest = async (requestId) => {
     try {
+      console.log("CLICKED:", requestId);
+
+      const token = localStorage.getItem("foundrai_token");
+
       const res = await fetch(
         `https://foundrai-1.onrender.com/api/accept-request/${requestId}`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           }
         }
       );
@@ -749,6 +755,9 @@ function MatchingPage({ user, navigate }) {
       const data = await res.json();
       console.log("RESPONSE:", data);
 
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      // update UI
       setRequests(prev =>
         prev.map(r =>
           r.id === requestId
@@ -757,11 +766,33 @@ function MatchingPage({ user, navigate }) {
         )
       );
 
+      alert("Connection accepted!");
+
     } catch (err) {
       console.error(err);
+      alert("Accept failed");
     }
-  }
- 
+  };
+
+  useEffect(() => {
+    const loadRequests = async () => {
+      const token = localStorage.getItem("foundrai_token");
+
+      const res = await fetch(
+        "https://foundrai-1.onrender.com/api/my-requests",
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await res.json();
+      setRequests(data);
+    };
+
+    loadRequests();
+  }, []);
 
   return (
     <div>
