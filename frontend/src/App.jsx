@@ -731,35 +731,24 @@ function MatchingPage({ user, navigate }) {
   }
   function ConnectionRequestsPage() {
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  console.log("REQUEST PAGE LOADED");
-
-  // ✅ ACCEPT REQUEST FUNCTION
   async function acceptRequest(requestId) {
+    console.log("CLICKED:", requestId);
+
     try {
-      console.log("CLICKED:", requestId);
-
-      const token = localStorage.getItem("foundrai_token");
-      console.log("TOKEN:", token);
-      console.log("REQUEST ID:", requestId);
-
       const res = await fetch(
-  `https://foundrai-1.onrender.com/api/accept-request/${requestId}`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    }
-  }
-);
+        `https://foundrai-1.onrender.com/api/accept-request/${requestId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
       const data = await res.json();
       console.log("RESPONSE:", data);
 
-      if (!res.ok) throw new Error(data.error || "Failed");
-
-      // update UI instantly
       setRequests(prev =>
         prev.map(r =>
           r.id === requestId
@@ -768,149 +757,22 @@ function MatchingPage({ user, navigate }) {
         )
       );
 
-      alert("Connection accepted!");
-
     } catch (err) {
-      console.error("ERROR:", err);
-      alert("Accept failed");
+      console.error(err);
     }
   }
 
-  // ✅ LOAD REQUESTS
-  useEffect(() => {
-    const loadRequests = async () => {
-      const token = localStorage.getItem("foundrai_token");
-
-      if (!token) {
-        console.log("NO TOKEN - USER NOT LOGGED IN");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(
-          "https://foundrai-1.onrender.com/api/my-requests",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            }
-          }
-        );
-
-        const data = await res.json();
-        console.log("REQUESTS:", data);
-
-        setRequests(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error(err);
-        setRequests([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadRequests();
-  }, []);
-
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#F8FAFC",
-      padding: "40px 20px",
-      fontFamily: "'Inter', sans-serif"
-    }}>
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+    <div>
+      {requests.map(r => (
+        <div key={r.id}>
+          <p>{r.name}</p>
 
-        <h2 style={{
-          fontSize: 22,
-          fontWeight: 700,
-          marginBottom: 24,
-          color: "#0F172A"
-        }}>
-          📩 Connection Requests
-        </h2>
-
-        {loading && (
-          <div style={{ color: "#64748B", fontSize: 14 }}>
-            Loading requests...
-          </div>
-        )}
-
-        {!loading && requests.length === 0 && (
-          <div style={{
-            padding: 20,
-            background: "#fff",
-            borderRadius: 12,
-            border: "1px solid #E2E8F0",
-            color: "#64748B",
-            textAlign: "center"
-          }}>
-            No pending connection requests
-          </div>
-        )}
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-
-          {requests.map((r) => (
-            <div
-              key={r.id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "14px 16px",
-                borderRadius: 12,
-                background: "#fff",
-                border: "1px solid #E2E8F0",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
-              }}
-            >
-              {/* LEFT */}
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 15 }}>
-                  {r.name}
-                </div>
-                <div style={{ fontSize: 13, color: "#64748B" }}>
-                  {r.email}
-                </div>
-              </div>
-
-              {/* RIGHT */}
-              <div style={{ display: "flex", gap: 10 }}>
-
-                {r.status === "pending" ? (
-                  <>
-                    <Button
-                      size="sm"
-                      onClick={() => acceptRequest(r.id)}
-                    >
-                      Accept
-                    </Button>
-
-                    <Button size="sm" variant="secondary">
-                      Reject
-                    </Button>
-                  </>
-                ) : (
-                  <div style={{
-                    padding: "4px 10px",
-                    borderRadius: 20,
-                    background: "#DCFCE7",
-                    color: "#166534",
-                    fontWeight: 600
-                  }}>
-                    Connected
-                  </div>
-                )}
-
-              </div>
-            </div>
-          ))}
-
+          <button onClick={() => acceptRequest(r.id)}>
+            Accept
+          </button>
         </div>
-      </div>
+      ))}
     </div>
   );
 }
