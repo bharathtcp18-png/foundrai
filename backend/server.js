@@ -235,6 +235,18 @@ app.get("/api/connections", (req, res) => {
   const rows = db.prepare("SELECT * FROM connections").all();
   res.json(rows);
 });
+app.get("/api/my-connections", auth, (req, res) => {
+  const userId = req.user.id;
+
+  const rows = db.prepare(`
+    SELECT *
+    FROM connections
+    WHERE (user_id = ? OR founder_id = ?)
+      AND status = 'accepted'
+  `).all(userId, userId);
+
+  res.json(rows);
+});
 app.get("/api/my-requests", auth, (req, res) => {
   const requests = db.prepare(`
     SELECT

@@ -672,6 +672,7 @@ function MatchingPage({ user, navigate }) {
   const [toast, setToast] = useState("");
   const [selectedFounder, setSelectedFounder] = useState(null);
   const [messages, setMessages] = useState({});
+  const [acceptedConnections, setAcceptedConnections] = useState([]);
 
   useEffect(() => {
   api("/users")
@@ -682,6 +683,30 @@ function MatchingPage({ user, navigate }) {
     })
     .catch(err => console.log(err));
 }, [user]);
+useEffect(() => {
+  const loadAcceptedConnections = async () => {
+    try {
+      const token = localStorage.getItem("foundrai_token");
+
+      const res = await fetch(
+        "https://foundrai-1.onrender.com/api/my-connections",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+console.log("Accepted Connections:", data);
+setAcceptedConnections(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  loadAcceptedConnections();
+}, []);
 
   async function applyFilters() {
     try {
@@ -729,85 +754,6 @@ function MatchingPage({ user, navigate }) {
     setAiExplain(p => ({ ...p, [founder.id]: result }));
     setLoadingAI(p => ({ ...p, [founder.id]: false }));
   }
-  function ConnectionRequestsPage() {
-  const [requests, setRequests] = useState([]);
-
-  console.log("REQUEST PAGE LOADED");
-
-  // ✅ MUST be inside component
-  const acceptRequest = async (requestId) => {
-    try {
-      console.log("CLICKED:", requestId);
-
-      const token = localStorage.getItem("foundrai_token");
-
-      const res = await fetch(
-        `https://foundrai-1.onrender.com/api/accept-request/${requestId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          }
-        }
-      );
-
-      const data = await res.json();
-      console.log("RESPONSE:", data);
-
-      if (!res.ok) throw new Error(data.error || "Failed");
-
-      // update UI
-      setRequests(prev =>
-        prev.map(r =>
-          r.id === requestId
-            ? { ...r, status: "accepted" }
-            : r
-        )
-      );
-
-      alert("Connection accepted!");
-
-    } catch (err) {
-      console.error(err);
-      alert("Accept failed");
-    }
-  };
-
-  useEffect(() => {
-    const loadRequests = async () => {
-      const token = localStorage.getItem("foundrai_token");
-
-      const res = await fetch(
-        "https://foundrai-1.onrender.com/api/my-requests",
-        {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        }
-      );
-
-      const data = await res.json();
-      setRequests(data);
-    };
-
-    loadRequests();
-  }, []);
-
-  return (
-    <div>
-      {requests.map(r => (
-        <div key={r.id}>
-          <p>{r.name}</p>
-
-          <button onClick={() => acceptRequest(r.id)}>
-            Accept
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-}
   function handleConnect(founder) {
     if (!connected.includes(founder.id)) {
       setConnected(p => [...p, founder.id]);
@@ -930,7 +876,26 @@ function MatchingPage({ user, navigate }) {
             </div>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
-            <Button onClick={() => { handleConnect(selectedFounder); setSelectedFounder(null); }} style={{ flex: 1 }}>Send Connection Request</Button>
+            {acceptedConnections.some(
+  c =>
+    (c.sender_id === selectedFounder.id ||
+      c.receiver_id === selectedFounder.id) &&
+    c.status === "accepted"
+) ? (
+  <Button disabled style={{ flex: 1 }}>
+    ✅ Connected
+  </Button>
+) : (
+  <Button
+    onClick={() => {
+      handleConnect(selectedFounder);
+      setSelectedFounder(null);
+    }}
+    style={{ flex: 1 }}
+  >
+    Send Connection Request
+  </Button>
+)}
             <Button variant="secondary" onClick={() => setSelectedFounder(null)} style={{ flex: 1 }}>Close</Button>
           </div>
         </Modal>
@@ -940,6 +905,146 @@ function MatchingPage({ user, navigate }) {
     </div>
   );
 }
+
+
+  function ConnectionRequestsPage() {
+  const [requests, setRequests] = useState([]);
+
+  console.log("REQUEST PAGE LOADED");
+
+  // ✅ MUST be inside component
+  const acceptRequest = async (requestId) => {
+    try {
+      console.log("CLICKED:", requestId);
+
+      const token = localStorage.getItem("foundrai_token");
+
+      const res = await fetch(
+        `https://foundrai-1.onrender.com/api/accept-request/${requestId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await res.json();
+      console.log("RESPONSE:", data);
+
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      // update UI
+      setRequests(prev =>
+        prev.map(r =>
+          r.id === requestId
+            ? { ...r, status: "accepted" }
+            : r
+        )
+      );
+
+      alert("Connection accepted!");
+
+    } catch (err) {
+      console.error(err);
+      alert("Accept failed");
+    }
+  };
+
+  useEffect(() => {
+    const loadRequests = async () => {
+      const token = localStorage.getItem("foundrai_token");
+
+      const res = await fetch(
+        "https://foundrai-1.onrender.com/api/my-requests",
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await res.json();
+      setRequests(data);
+    };
+
+    loadRequests();
+  }, []);
+
+  return (
+    <div>
+      {requests.map(r => (
+        <div key={r.id}>
+          <p>{r.name}</p>
+
+      <button onClick={() => acceptRequest(r.id)}>
+        Accept
+      </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+function MyConnectionsPage() {
+  const [connections, setConnections] = useState([]);
+
+  useEffect(() => {
+    loadConnections();
+  }, []);
+
+  async function loadConnections() {
+    try {
+      const token = localStorage.getItem("foundrai_token");
+
+      const res = await fetch(
+        "https://foundrai-1.onrender.com/api/my-connections",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await res.json();
+      setConnections(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  return (
+    <div style={{ padding: 30 }}>
+      <h2>🤝 My Connections</h2>
+
+      {connections.length === 0 ? (
+        <p>No connections yet.</p>
+      ) : (
+        connections.map((c) => (
+          <div
+            key={c.id}
+            style={{
+              border: "1px solid #ddd",
+              padding: 15,
+              marginBottom: 15,
+              borderRadius: 10
+            }}
+          >
+            <h3>Connection #{c.id}</h3>
+
+            <p>Status: ✅ Connected</p>
+
+            <p>Sender ID: {c.sender_id}</p>
+
+            <p>Receiver ID: {c.receiver_id}</p>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+  
+
 
 // ─── STARTUPS MARKETPLACE ────────────────────────────────────────────────────
 function StartupsPage({ navigate }) {
@@ -1704,6 +1809,7 @@ export default function FoundrAI() {
     { key: "dashboard", label: "🏠 Dashboard" },
     { key: "matching", label: "🤝 Find Co-Founder" },
     { key: "requests", label: "📩 Requests" },
+    { key: "connections", label: "🔗 My Connections" }, 
     { key: "startups", label: "💡 Startups" },
     { key: "workspace", label: "🛠️ Workspace" },
     { key: "mentors", label: "🎓 Mentors" },
@@ -1860,6 +1966,7 @@ export default function FoundrAI() {
       {page === "dashboard" && <Dashboard user={user} navigate={setPage} />}
       {page === "matching" && <MatchingPage user={user} navigate={setPage} />}
       {page === "requests" && <ConnectionRequestsPage user={user} />}
+      {page === "connections" && <MyConnectionsPage />}
       {page === "startups" && <StartupsPage navigate={setPage} />}
       {page === "workspace" && <WorkspacePage />}
       {page === "mentors" && <MentorsPage />}
