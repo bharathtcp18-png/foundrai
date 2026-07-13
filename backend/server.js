@@ -239,11 +239,19 @@ app.get("/api/my-connections", auth, (req, res) => {
   const userId = req.user.id;
 
   const rows = db.prepare(`
-    SELECT *
-    FROM connections
-    WHERE (user_id = ? OR founder_id = ?)
-      AND status = 'accepted'
-  `).all(userId, userId);
+    SELECT
+      c.id,
+      c.status,
+      f.name,
+      f.role,
+      f.location,
+      f.avatar
+    FROM connections c
+    JOIN founders f
+      ON f.id = c.founder_id
+    WHERE c.user_id = ?
+      AND c.status = 'accepted'
+  `).all(userId);
 
   res.json(rows);
 });
@@ -325,6 +333,10 @@ app.get("/api/my-requests", auth, (req, res) => {
     WHERE connections.founder_id = ?
   `).all(req.user.id);
 
+  res.json(rows);
+});
+app.get("/api/founders-test", (req, res) => {
+  const rows = db.prepare("SELECT * FROM founders").all();
   res.json(rows);
 });
 

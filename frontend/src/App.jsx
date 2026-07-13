@@ -1030,13 +1030,17 @@ function MyConnectionsPage() {
               borderRadius: 10
             }}
           >
-            <h3>Connection #{c.id}</h3>
+            <h3>🤝 Connected with: {c.name}</h3>
 
-            <p>Status: ✅ Connected</p>
 
-            <p>Sender ID: {c.sender_id}</p>
 
-            <p>Receiver ID: {c.receiver_id}</p>
+<p>💼 {c.role}</p>
+
+<p>📍 {c.location}</p>
+
+<p style={{ color: "green", fontWeight: "bold" }}>
+  ✅ Connected
+</p>
           </div>
         ))
       )}
