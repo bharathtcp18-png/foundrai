@@ -242,15 +242,16 @@ app.get("/api/my-connections", auth, (req, res) => {
     SELECT
       c.id,
       c.status,
-      f.name,
-      f.role,
-      f.location,
-      f.avatar
+      u.name,
+      u.email,
+      u.role,
+      u.location,
+      u.avatar
     FROM connections c
-    JOIN founders f
-      ON f.id = c.founder_id
+    JOIN users u
+      ON u.id = c.founder_id
     WHERE c.user_id = ?
-      AND c.status = 'accepted'
+        AND c.status = 'accepted'
   `).all(userId);
 
   res.json(rows);
