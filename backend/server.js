@@ -238,27 +238,26 @@ app.get("/api/connections", (req, res) => {
 app.get("/api/my-connections", auth, (req, res) => {
   console.log("Logged in user:", req.user);
 
-  const userId = req.user.id;
+  const allConnections = db.prepare(`
+    SELECT *
+    FROM connections
+  `).all();
+
+  console.log("ALL CONNECTIONS:", allConnections);
 
   const rows = db.prepare(`
     SELECT
-      c.id,
-      c.user_id,
-      c.founder_id,
-      c.status,
+      c.*,
       u.name,
-      u.email,
-      u.role,
-      u.location,
-      u.avatar
+      u.email
     FROM connections c
-    JOIN users u
+    LEFT JOIN users u
       ON u.id = c.founder_id
     WHERE c.user_id = ?
-        AND c.status='accepted'
-  `).all(userId);
+      AND c.status = 'accepted'
+  `).all(req.user.id);
 
-  console.log("Rows:", rows);
+  console.log("MATCHING ROWS:", rows);
 
   res.json(rows);
 });
