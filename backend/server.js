@@ -236,28 +236,29 @@ app.get("/api/connections", (req, res) => {
   res.json(rows);
 });
 app.get("/api/my-connections", auth, (req, res) => {
-  console.log("Logged in user:", req.user);
-
-  const allConnections = db.prepare(`
-    SELECT *
-    FROM connections
-  `).all();
-
-  console.log("ALL CONNECTIONS:", allConnections);
+  const userId = req.user.id;
 
   const rows = db.prepare(`
     SELECT
-      c.*,
+      c.id,
+      c.status,
+      u.id,
       u.name,
-      u.email
+      u.email,
+      u.role,
+      u.location,
+      u.avatar
     FROM connections c
-    LEFT JOIN users u
-      ON u.id = c.founder_id
-    WHERE c.user_id = ?
-      AND c.status = 'accepted'
-  `).all(req.user.id);
+    JOIN users u
+      ON (
+        (c.user_id = ? AND u.id = c.founder_id)
+        OR
+        (c.founder_id = ? AND u.id = c.user_id)
+      )
+    WHERE c.status = 'accepted'
+  `).all(userId, userId);
 
-  console.log("MATCHING ROWS:", rows);
+  console.log(rows);
 
   res.json(rows);
 });
