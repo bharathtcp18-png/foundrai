@@ -340,7 +340,13 @@ app.get("/api/founders-test", (req, res) => {
   const rows = db.prepare("SELECT * FROM founders").all();
   res.json(rows);
 });
-
+app.get("/api/debug-connections", (req, res) => {
+  const rows = db.prepare("SELECT * FROM connections").all();
+  res.json(rows);
+});app.get("/api/debug-connections", (req, res) => {
+  const rows = db.prepare("SELECT * FROM connections").all();
+  res.json(rows);
+});
 
 // server start
 const PORT = process.env.PORT || 4000;
