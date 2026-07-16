@@ -347,7 +347,30 @@ app.get("/api/debug-connections", (req, res) => {
   const rows = db.prepare("SELECT * FROM connections").all();
   res.json(rows);
 });
+app.get("/api/debug-users", (req, res) => {
+  const rows = db.prepare(`
+    SELECT id, name, email, role, location
+    FROM users
+  `).all();
 
+  res.json(rows);
+});
+app.get("/api/debug-my-connections", (req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      c.id,
+      c.user_id,
+      c.founder_id,
+      c.status,
+      u.id AS userTableId,
+      u.name
+    FROM connections c
+    LEFT JOIN users u
+      ON u.id = c.founder_id
+  `).all();
+
+  res.json(rows);
+});
 // server start
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () =>
