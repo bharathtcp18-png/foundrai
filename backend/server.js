@@ -236,11 +236,15 @@ app.get("/api/connections", (req, res) => {
   res.json(rows);
 });
 app.get("/api/my-connections", auth, (req, res) => {
+  console.log("Logged in user:", req.user);
+
   const userId = req.user.id;
 
   const rows = db.prepare(`
     SELECT
       c.id,
+      c.user_id,
+      c.founder_id,
       c.status,
       u.name,
       u.email,
@@ -251,8 +255,10 @@ app.get("/api/my-connections", auth, (req, res) => {
     JOIN users u
       ON u.id = c.founder_id
     WHERE c.user_id = ?
-        AND c.status = 'accepted'
+        AND c.status='accepted'
   `).all(userId);
+
+  console.log("Rows:", rows);
 
   res.json(rows);
 });
